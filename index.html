@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#12122a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>🔍 Detetive</title>
+
+  <style>
+    /* =========================================================
+       RESET & TOKENS
+    ========================================================= */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      /* Cores base */
+      --bg:          #0d0d1f;
+      --surface:     #12122a;
+      --card:        #181832;
+      --card2:       #1e1e3c;
+      --border:      rgba(255,255,255,0.07);
+      --border-med:  rgba(255,255,255,0.12);
+
+      /* Texto */
+      --text:        #e8e8f5;
+      --text-muted:  #7070a0;
+      --text-dim:    #4a4a70;
+
+      /* Acento dourado */
+      --gold:        #c9a84c;
+      --gold-light:  #f0ca6e;
+      --gold-bg:     rgba(201,168,76,0.12);
+
+      /* Vermelho */
+      --accent-red:  #e04060;
+
+      /* Estados de célula */
+      --cell-check-bg:   rgba(34,197,94,0.15);
+      --cell-check-text: #4ade80;
+      --cell-cross-bg:   rgba(239,68,68,0.15);
+      --cell-cross-text: #f87171;
+      --cell-quest-bg:   rgba(251,191,36,0.15);
+      --cell-quest-text: #fbbf24;
+
+      /* Raios */
+      --r:    14px;
+      --r-sm:  8px;
+      --r-xs:  6px;
+    }
+
+    /* =========================================================
+       TEMA CLARO
+    ========================================================= */
+    html.light {
+      --bg:          #f2f0f8;
+      --surface:     #ffffff;
+      --card:        #f8f7fd;
+      --card2:       #eeeaf8;
+      --border:      rgba(0,0,0,0.07);
+      --border-med:  rgba(0,0,0,0.13);
+      --text:        #1c1c30;
+      --text-muted:  #5a5a8a;
+      --text-dim:    #a0a0c0;
+      --gold:        #8a6518;
+      --gold-light:  #a07820;
+      --gold-bg:     rgba(140,100,24,0.1);
+      --cell-check-bg:   rgba(22,163,74,0.12);
+      --cell-check-text: #15803d;
+      --cell-cross-bg:   rgba(220,38,38,0.12);
+      --cell-cross-text: #dc2626;
+      --cell-quest-bg:   rgba(217,119,6,0.12);
+      --cell-quest-text: #b45309;
+    }
+
+    /* Overrides de valores hardcoded que variam por tema */
+    html.light .grid-table thead th {
+      background: rgba(0,0,0,0.04);
+    }
+
+    html.light .grid-table tbody tr:nth-child(even) {
+      background: rgba(0,0,0,0.025);
+    }
+
+    html.light .grid-table tbody td {
+      border-bottom-color: rgba(0,0,0,0.06);
+    }
+
+    html.light .cell-btn[data-state=""]:active {
+      background: rgba(0,0,0,0.05);
+    }
+
+    html, body, .header, .bottom-nav, .section-card,
+    .modal, .notes-area, .scroll-area {
+      transition: background-color 0.22s, border-color 0.22s, color 0.22s;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
+                   Arial, system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.4;
+      overscroll-behavior: none;
+    }
+
+    /* Centralizado e limitado em desktop */
+    body {
+      display: flex;
+      flex-direction: column;
+      max-width: 520px;
+      margin: 0 auto;
+      height: 100dvh;
+      height: 100vh; /* fallback */
+      overflow: hidden;
+      border-left:  1px solid var(--border);
+      border-right: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    /* =========================================================
+       HEADER
+    ========================================================= */
+    .header {
+      flex-shrink: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border-med);
+      padding: 10px 14px 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      z-index: 100;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: var(--gold-bg);
+      border: 1px solid rgba(201,168,76,0.35);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.15;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--gold-light);
+      letter-spacing: 0.3px;
+    }
+
+    .round-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--gold-bg);
+      border: 1px solid rgba(201,168,76,0.3);
+      border-radius: 20px;
+      padding: 1px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gold);
+    }
+
+    .round-num {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--gold-light);
+    }
+
+    /* Botões do header */
+    .header-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      border: none;
+      border-radius: var(--r-xs);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 11px;
+      padding: 8px 11px;
+      letter-spacing: 0.2px;
+      transition: transform 0.1s, opacity 0.15s, background 0.15s;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      line-height: 1;
+    }
+
+    .btn:active {
+      transform: scale(0.93);
+    }
+
+    .btn-round {
+      background: var(--gold-bg);
+      color: var(--gold-light);
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+
+    .btn-round:active {
+      background: rgba(201,168,76,0.25);
+    }
+
+    .btn-reset {
+      background: rgba(224,64,96,0.15);
+      color: #f87171;
+      border: 1px solid rgba(224,64,96,0.3);
+    }
+
+    .btn-reset:active {
+      background: rgba(224,64,96,0.28);
+    }
+
+    .btn-theme {
+      background: var(--card2);
+      color: var(--text-muted);
+      border: 1px solid var(--border-med);
+      padding: 8px 9px;
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .btn-theme:active {
+      background: var(--gold-bg);
+    }
+
+    /* =========================================================
+       SCROLL AREA
+    ========================================================= */
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding: 10px 10px 8px;
+    }
+
+    /* Barra de scroll customizada */
+    .scroll-area::-webkit-scrollbar {
+      width: 4px;
+    }
+    .scroll-area::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .scroll-area::-webkit-scrollbar-thumb {
+      background: var(--border-med);
+      border-radius: 2px;
+    }
+
+    /* =========================================================
+       PAINÉIS DE ABA
+    ========================================================= */
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* =========================================================
+       SEÇÃO CARD (Suspeitos / Armas / Cômodos)
+    ========================================================= */
+    .section-card {
+      background: var(--card);
+      border: 1px solid var(--border-med);
+      border-radius: var(--r);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--card2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-icon {
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+    }
+
+    /* =========================================================
+       GRID TABLE
+    ========================================================= */
+    .grid-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .grid-table {
+      width: 100%;
+      min-width: 280px;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    /* Cabeçalho da tabela */
+    .grid-table thead th {
+      padding: 8px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    .grid-table thead th.col-name {
+      text-align: left;
+      padding-left: 14px;
+      width: 44%;
+    }
+
+    .grid-table thead th.col-player {
+      width: 14%;
+    }
+
+    /* Linhas */
+    .grid-table tbody tr {
+      transition: background 0.1s;
+    }
+
+    .grid-table tbody tr:nth-child(even) {
+      background: rgba(255,255,255,0.018);
+    }
+
+    .grid-table tbody td {
+      border-bottom: 1px solid rgba(255,255,255,0.035);
+      vertical-align: middle;
+    }
+
+    .grid-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Nome do item */
+    .item-name {
+      padding: 0 14px;
+      font-size: 12.5px;
+      color: var(--text);
+      height: 44px;
+      display: flex;
+      align-items: center;
+    }
+
+    /* =========================================================
+       CÉLULA CLICÁVEL
+    ========================================================= */
+    .cell-td {
+      padding: 3px;
+    }
+
+    .cell-btn {
+      width: 100%;
+      height: 38px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-radius: var(--r-xs);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
+      transition: background 0.12s, transform 0.08s;
+      color: var(--text-dim);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .cell-btn:active {
+      transform: scale(0.88);
+    }
+
+    /* Estado vazio: ponto indicando que é clicável */
+    .cell-btn[data-state=""] {
+      background: transparent;
+      color: var(--text-dim);
+    }
+
+    .cell-btn[data-state=""]:active {
+      background: rgba(255,255,255,0.04);
+    }
+
+    /* ✔ Verde */
+    .cell-btn[data-state="check"] {
+      background: var(--cell-check-bg);
+      color: var(--cell-check-text);
+    }
+
+    /* ✘ Vermelho */
+    .cell-btn[data-state="cross"] {
+      background: var(--cell-cross-bg);
+      color: var(--cell-cross-text);
+    }
+
+    /* ? Amarelo */
+    .cell-btn[data-state="question"] {
+      background: var(--cell-quest-bg);
+      color: var(--cell-quest-text);
+    }
+
+    /* =========================================================
+       ABA NOTAS
+    ========================================================= */
+    .notes-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      height: 100%;
+    }
+
+    .notes-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 2px;
+    }
+
+    .notes-topbar-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+    }
+
+    .save-dot {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--cell-check-text);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .save-dot.show {
+      opacity: 1;
+    }
+
+    .notes-area {
+      flex: 1;
+      width: 100%;
+      min-height: calc(100dvh - 185px);
+      min-height: calc(100vh - 185px); /* fallback */
+      background: var(--card);
+      border: 1px solid var(--border-med);
+      border-radius: var(--r);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.7;
+      padding: 14px;
+      resize: none;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .notes-area:focus {
+      border-color: rgba(201,168,76,0.4);
+    }
+
+    .notes-area::placeholder {
+      color: var(--text-dim);
+    }
+
+    /* =========================================================
+       NAVEGAÇÃO INFERIOR (TABS)
+    ========================================================= */
+    .bottom-nav {
+      flex-shrink: 0;
+      display: flex;
+      background: var(--surface);
+      border-top: 1px solid var(--border-med);
+      z-index: 100;
+    }
+
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 9px 4px 11px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      border-top: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+      color: var(--text-dim);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .nav-btn .nav-icon {
+      font-size: 19px;
+      line-height: 1;
+    }
+
+    .nav-btn.active {
+      color: var(--gold);
+      border-top-color: var(--gold);
+    }
+
+    /* =========================================================
+       MODAL DE CONFIRMAÇÃO
+    ========================================================= */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--card2);
+      border: 1px solid var(--border-med);
+      border-radius: var(--r);
+      padding: 24px 20px;
+      width: 100%;
+      max-width: 310px;
+      transform: scale(0.92);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.open .modal {
+      transform: scale(1);
+    }
+
+    .modal-icon {
+      font-size: 32px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .modal h3 {
+      font-size: 16px;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .modal p {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.55;
+      margin-bottom: 20px;
+    }
+
+    .modal-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-btns .btn {
+      flex: 1;
+      padding: 13px 8px;
+      font-size: 13px;
+      justify-content: center;
+      border-radius: var(--r-sm);
+    }
+
+    .btn-cancel {
+      background: var(--card);
+      color: var(--text-muted);
+      border: 1px solid var(--border-med);
+    }
+
+    .btn-confirm-reset {
+      background: rgba(224,64,96,0.2);
+      color: #f87171;
+      border: 1px solid rgba(224,64,96,0.35);
+    }
+
+    /* =========================================================
+       LEGENDA
+    ========================================================= */
+    .legend {
+      display: flex;
+      gap: 10px;
+      padding: 8px 4px 4px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .legend-chip {
+      font-size: 12px;
+      font-weight: 700;
+      width: 22px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .legend-chip.check   { background: var(--cell-check-bg);  color: var(--cell-check-text); }
+    .legend-chip.cross   { background: var(--cell-cross-bg);  color: var(--cell-cross-text); }
+    .legend-chip.quest   { background: var(--cell-quest-bg);  color: var(--cell-quest-text); }
+  </style>
+</head>
+
+<body>
+
+  <!-- ====================================================
+       CABEÇALHO
+  ==================================================== -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="brand-icon">🔍</div>
+      <div class="brand-text">
+        <span class="brand-title">Detetive</span>
+        <span class="round-badge">
+          Rodada&nbsp;<span class="round-num" id="roundNum">1</span>
+        </span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-theme" id="themeToggle" onclick="alternarTema()" title="Alternar tema">🌙</button>
+      <button class="btn btn-round" onclick="novaRodada()" title="Nova rodada">
+        +&nbsp;Rodada
+      </button>
+      <button class="btn btn-reset" onclick="abrirModal()" title="Resetar jogo">
+        ↺&nbsp;Reset
+      </button>
+    </div>
+  </header>
+
+  <!-- ====================================================
+       ÁREA DE ROLAGEM
+  ==================================================== -->
+  <div class="scroll-area" id="scrollArea">
+
+    <!-- ── ABA: MARCAÇÃO ── -->
+    <div class="tab-panel active" id="panel-marcacao">
+
+      <!-- Legenda -->
+      <div class="legend">
+        <div class="legend-item"><span class="legend-chip check">✔</span> Tem</div>
+        <div class="legend-item"><span class="legend-chip cross">✘</span> Não tem</div>
+        <div class="legend-item"><span class="legend-chip quest">?</span> Dúvida</div>
+        <div class="legend-item" style="margin-left:auto;color:var(--text-dim);font-size:10px">
+          Toque para alternar
+        </div>
+      </div>
+
+      <!-- Suspeitos -->
+      <div class="section-card">
+        <div class="section-head">
+          <span class="section-icon">🕵️</span>
+          <span class="section-label">Suspeitos</span>
+        </div>
+        <div class="grid-wrap">
+          <table class="grid-table" id="table-suspeitos">
+            <thead>
+              <tr>
+                <th class="col-name">Nome</th>
+                <th class="col-player">P1</th>
+                <th class="col-player">P2</th>
+                <th class="col-player">P3</th>
+                <th class="col-player">P4</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Armas -->
+      <div class="section-card">
+        <div class="section-head">
+          <span class="section-icon">🔫</span>
+          <span class="section-label">Armas</span>
+        </div>
+        <div class="grid-wrap">
+          <table class="grid-table" id="table-armas">
+            <thead>
+              <tr>
+                <th class="col-name">Nome</th>
+                <th class="col-player">P1</th>
+                <th class="col-player">P2</th>
+                <th class="col-player">P3</th>
+                <th class="col-player">P4</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cômodos -->
+      <div class="section-card">
+        <div class="section-head">
+          <span class="section-icon">🏛️</span>
+          <span class="section-label">Cômodos</span>
+        </div>
+        <div class="grid-wrap">
+          <table class="grid-table" id="table-comodos">
+            <thead>
+              <tr>
+                <th class="col-name">Nome</th>
+                <th class="col-player">P1</th>
+                <th class="col-player">P2</th>
+                <th class="col-player">P3</th>
+                <th class="col-player">P4</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /panel-marcacao -->
+
+    <!-- ── ABA: NOTAS ── -->
+    <div class="tab-panel" id="panel-notas">
+      <div class="notes-panel">
+        <div class="notes-topbar">
+          <span class="notes-topbar-label">📝 Anotações</span>
+          <span class="save-dot" id="saveDot">✓ Salvo</span>
+        </div>
+        <textarea
+          class="notes-area"
+          id="notesArea"
+          placeholder="Suas anotações aqui…&#10;&#10;Ex:&#10;— Rodada 1: João mostrou Faca&#10;— Maria tem Cozinha&#10;— Suspeito: Prof. Plum"
+        ></textarea>
+      </div>
+    </div><!-- /panel-notas -->
+
+  </div><!-- /scroll-area -->
+
+  <!-- ====================================================
+       NAVEGAÇÃO INFERIOR
+  ==================================================== -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="navMarcacao" onclick="trocarAba('marcacao')">
+      <span class="nav-icon">📋</span>
+      Marcação
+    </button>
+    <button class="nav-btn" id="navNotas" onclick="trocarAba('notas')">
+      <span class="nav-icon">📝</span>
+      Notas
+    </button>
+  </nav>
+
+  <!-- ====================================================
+       MODAL – CONFIRMAR RESET
+  ==================================================== -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-icon">⚠️</div>
+      <h3>Resetar Jogo?</h3>
+      <p>Todas as marcações, notas e o contador de rodadas serão apagados permanentemente.</p>
+      <div class="modal-btns">
+        <button class="btn btn-cancel" onclick="fecharModal()">Cancelar</button>
+        <button class="btn btn-confirm-reset" onclick="executarReset()">Resetar tudo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================
+       JAVASCRIPT
+  ==================================================== -->
+  <script>
+    'use strict';
+
+    // ──────────────────────────────────────────────────
+    // DADOS DO JOGO
+    // ──────────────────────────────────────────────────
+    const DADOS = {
+      suspeitos: [
+        'Cel. Mustard',
+        'Prof. Plum',
+        'Rev. Green',
+        'Sra. Peacock',
+        'Srta. Scarlet',
+        'Sra. White'
+      ],
+      armas: [
+        'Faca',
+        'Castiçal',
+        'Revólver',
+        'Corda',
+        'Cano de Chumbo',
+        'Chave Inglesa'
+      ],
+      comodos: [
+        'Entrada',
+        'Sala de Estar',
+        'Sala de Jantar',
+        'Cozinha',
+        'Sala de Música',
+        'Jardim de Inverno',
+        'Salão de Jogos',
+        'Biblioteca',
+        'Escritório'
+      ]
+    };
+
+    // Ciclo de estados ao clicar
+    const CICLO  = ['', 'check', 'cross', 'question'];
+    const ICONES = { '': '·', check: '✔', cross: '✘', question: '?' };
+
+    // ──────────────────────────────────────────────────
+    // ARMAZENAMENTO (LocalStorage)
+    // ──────────────────────────────────────────────────
+    const KEY_CELULAS = 'det_celulas';
+    const KEY_NOTAS   = 'det_notas';
+    const KEY_RODADA  = 'det_rodada';
+    const KEY_TEMA    = 'det_tema';
+
+    function lsGet(chave, padrao) {
+      try {
+        const v = localStorage.getItem(chave);
+        return v !== null ? JSON.parse(v) : padrao;
+      } catch (_) {
+        return padrao;
+      }
+    }
+
+    function lsSet(chave, valor) {
+      try {
+        localStorage.setItem(chave, JSON.stringify(valor));
+      } catch (_) { /* sem espaço — ignorar silenciosamente */ }
+    }
+
+    // ──────────────────────────────────────────────────
+    // ESTADO DA APLICAÇÃO
+    // ──────────────────────────────────────────────────
+    let celulas   = lsGet(KEY_CELULAS, {}); // { "suspeitos_0_2": "check", ... }
+    let rodada    = lsGet(KEY_RODADA, 1);
+    let temaClaro = lsGet(KEY_TEMA, false);
+
+    // ──────────────────────────────────────────────────
+    // INICIALIZAÇÃO DAS TABELAS
+    // ──────────────────────────────────────────────────
+    function criarTabela(tableId, categoria, itens) {
+      const tbody = document.querySelector('#' + tableId + ' tbody');
+      tbody.innerHTML = '';
+
+      itens.forEach(function(nome, row) {
+        const tr = document.createElement('tr');
+
+        // Célula do nome
+        const tdNome = document.createElement('td');
+        const divNome = document.createElement('div');
+        divNome.className = 'item-name';
+        divNome.textContent = nome;
+        tdNome.appendChild(divNome);
+        tr.appendChild(tdNome);
+
+        // Células P1–P4
+        for (let col = 0; col < 4; col++) {
+          const chave  = categoria + '_' + row + '_' + col;
+          const estado = celulas[chave] || '';
+
+          const td  = document.createElement('td');
+          td.className = 'cell-td';
+
+          const btn = document.createElement('button');
+          btn.className   = 'cell-btn';
+          btn.dataset.key = chave;
+          btn.dataset.state = estado;
+          btn.textContent = ICONES[estado];
+          btn.setAttribute('aria-label', nome + ' – Jogador ' + (col + 1));
+          btn.addEventListener('click', onCelulaClick);
+
+          td.appendChild(btn);
+          tr.appendChild(td);
+        }
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function iniciarTabelas() {
+      criarTabela('table-suspeitos', 'suspeitos', DADOS.suspeitos);
+      criarTabela('table-armas',     'armas',     DADOS.armas);
+      criarTabela('table-comodos',   'comodos',   DADOS.comodos);
+    }
+
+    // ──────────────────────────────────────────────────
+    // CLIQUE NA CÉLULA — ciclo de estados
+    // ──────────────────────────────────────────────────
+    function onCelulaClick(evt) {
+      const btn   = evt.currentTarget;
+      const chave = btn.dataset.key;
+      const atual = btn.dataset.state || '';
+      const idx   = CICLO.indexOf(atual);
+      const prox  = CICLO[(idx + 1) % CICLO.length];
+
+      btn.dataset.state = prox;
+      btn.textContent   = ICONES[prox];
+
+      // Atualiza estado em memória e persiste
+      if (prox === '') {
+        delete celulas[chave];
+      } else {
+        celulas[chave] = prox;
+      }
+      lsSet(KEY_CELULAS, celulas);
+    }
+
+    // ──────────────────────────────────────────────────
+    // RODADA
+    // ──────────────────────────────────────────────────
+    function renderRodada() {
+      document.getElementById('roundNum').textContent = rodada;
+    }
+
+    function novaRodada() {
+      rodada++;
+      lsSet(KEY_RODADA, rodada);
+      renderRodada();
+    }
+
+    // ──────────────────────────────────────────────────
+    // RESET
+    // ──────────────────────────────────────────────────
+    function abrirModal() {
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    function fecharModal() {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    function executarReset() {
+      // Limpar estado
+      celulas = {};
+      rodada  = 1;
+
+      // Limpar storage
+      localStorage.removeItem(KEY_CELULAS);
+      localStorage.removeItem(KEY_RODADA);
+      localStorage.removeItem(KEY_NOTAS);
+
+      // Atualizar UI
+      renderRodada();
+      iniciarTabelas();
+      document.getElementById('notesArea').value = '';
+
+      fecharModal();
+    }
+
+    // Fechar modal ao clicar fora da caixa
+    document.getElementById('modalOverlay').addEventListener('click', function(e) {
+      if (e.target === this) fecharModal();
+    });
+
+    // ──────────────────────────────────────────────────
+    // NOTAS — auto-save com debounce
+    // ──────────────────────────────────────────────────
+    const notesArea  = document.getElementById('notesArea');
+    const saveDot    = document.getElementById('saveDot');
+    let   saveTimer  = null;
+
+    // Carregar notas salvas
+    notesArea.value = lsGet(KEY_NOTAS, '');
+
+    notesArea.addEventListener('input', function() {
+      clearTimeout(saveTimer);
+      saveDot.classList.remove('show');
+
+      saveTimer = setTimeout(function() {
+        lsSet(KEY_NOTAS, notesArea.value);
+        saveDot.classList.add('show');
+        setTimeout(function() { saveDot.classList.remove('show'); }, 2000);
+      }, 600);
+    });
+
+    // ──────────────────────────────────────────────────
+    // TROCA DE ABA
+    // ──────────────────────────────────────────────────
+    function trocarAba(aba) {
+      // Painéis
+      document.querySelectorAll('.tab-panel').forEach(function(p) {
+        p.classList.remove('active');
+      });
+      document.getElementById('panel-' + aba).classList.add('active');
+
+      // Botões de nav
+      document.querySelectorAll('.nav-btn').forEach(function(b) {
+        b.classList.remove('active');
+      });
+      document.getElementById('nav' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
+
+      // Rolar ao topo
+      document.getElementById('scrollArea').scrollTop = 0;
+    }
+
+    // ──────────────────────────────────────────────────
+    // TEMA CLARO / ESCURO
+    // ──────────────────────────────────────────────────
+    function aplicarTema() {
+      const btn = document.getElementById('themeToggle');
+      if (temaClaro) {
+        document.documentElement.classList.add('light');
+        btn.textContent = '☀️';
+        btn.title = 'Mudar para tema escuro';
+      } else {
+        document.documentElement.classList.remove('light');
+        btn.textContent = '🌙';
+        btn.title = 'Mudar para tema claro';
+      }
+    }
+
+    function alternarTema() {
+      temaClaro = !temaClaro;
+      lsSet(KEY_TEMA, temaClaro);
+      aplicarTema();
+    }
+
+    // ──────────────────────────────────────────────────
+    // BOOT
+    // ──────────────────────────────────────────────────
+    aplicarTema();
+    iniciarTabelas();
+    renderRodada();
+  </script>
+
+</body>
+</html>
